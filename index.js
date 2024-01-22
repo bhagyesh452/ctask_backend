@@ -543,6 +543,21 @@ app.put("/api/requestgData/:id", async (req, res) => {
   }
 });
 
+app.delete('/newcompanynamedelete/:id', async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    // Find the document by id and update the ename field to null or an empty string
+    const updatedData = await CompanyModel.findByIdAndUpdate(id, { ename: null }, { new: true });
+
+    res.json({ message: 'Ename deleted successfully', updatedData });
+  } catch (error) {
+    console.error('Error deleting ename:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 app.listen(3001, () => {
   console.log("Server is running");
 });
