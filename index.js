@@ -2,8 +2,12 @@ const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose');
 const adminModel = require('./models/Admin');
-const CompanyModel = require('./models/Leads')
+const CompanyModel = require('./models/Leads');
+const RequestModel = require('./models/Request');
+const RequestGModel = require('./models/RequestG')
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
 
 
 const app = express();
@@ -16,7 +20,10 @@ mongoose.connect('mongodb://localhost:27017/AdminTable')
 }).catch((err)=>{
 console.log(err)
 });
-const secretKey = 'random32numberjsonwebtokenrequire';
+// const secretKey = 'random32numberjsonwebtokenrequire';
+const secretKey = process.env.SECRET_KEY || 'mydefaultsecret';
+console.log(secretKey)
+
 
 
 app.post('/login',async (req, res) => {
@@ -74,12 +81,13 @@ const deleteAllData = async () => {
 // deleteAllData();
 
 app.post('/api/leads', async (req, res) => {
-
+const csvData = req.body;
 
   try {
     for (const employeeData of csvData) {
       try {
-        const employee = new CompanyModel(employeeData);
+        const employeeWithAssignData = { ...employeeData, AssignDate: new Date() };
+        const employee = new CompanyModel(employeeWithAssignData);
         const savedEmployee = await employee.save();
         console.log("Data sent successfully");
       } catch (error) {
@@ -148,8 +156,8 @@ app.post('/update-remarks/:id', async (req, res) => {
 
 app.post('/einfo', async (req, res) => {
   try {
-    // Check if cInfo is provided, otherwise set it as an empty array
    
+   console.log(req.body);
 
     adminModel.create(req.body).then((respond) => {
       res.json(respond);
@@ -248,6 +256,22 @@ app.delete('/api/delete-rows', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+  // app.put('/ecompany/:ename', async (req, res) => {
+  //   const name = req.params.id;
+  
+  //   try {
+  //     const updatedData = await CompanyModel.find({ename : name}, { new: true });
+  
+  //     if (!updatedData) {
+  //       return res.status(404).json({ error: 'Data not found' });
+  //     }
+  
+  //     res.json({ message: 'Data updated successfully', updatedData });
+  //   } catch (error) {
+  //     console.error('Error updating data:', error);
+  //     res.status(500).json({ error: 'Internal Server Error' });
+  //   }
+  // });
 
 
 
@@ -255,17 +279,21 @@ app.delete('/api/delete-rows', async (req, res) => {
 
   app.post('/api/postData', async (req, res) => {
     const { employeeSelection, selectedObjects } = req.body;
-  
     // Check if data is already assigned
     // if (selectedObjects.every((obj) => obj.ename === employeeSelection)) {
     //   return res.status(400).json({ error: `Data is already assigned to ${employeeSelection}` });
     // }
-  
+ 
     console.log(employeeSelection, selectedObjects);
+
   
     // If not assigned, post data to MongoDB or perform any desired action
     const updatePromises = selectedObjects.map((obj) => {
-      return CompanyModel.updateOne({ _id: obj._id }, { ename: employeeSelection });
+      // Add AssignData property with the current date
+      const updatedObj = { ...obj, 
+        ename:employeeSelection,
+        AssignDate: new Date() };
+      return CompanyModel.updateOne({ _id: obj._id }, updatedObj);
     });
   
     // Execute all update promises
@@ -274,6 +302,38 @@ app.delete('/api/delete-rows', async (req, res) => {
     res.json({ message: 'Data posted successfully' });
   });
 
+  app.post('/api/company', async (req, res) => {
+    const { newemployeeSelection, csvdata } = req.body;
+  
+    try {
+      const insertedCompanies = [];
+      
+      for (const company of csvdata) {
+        // Check for duplicate based on some unique identifier, like companyNumber
+        const isDuplicate = await CompanyModel.exists({ "Company Name": company["Company Name"] });
+  
+        if (!isDuplicate) {
+          // If not a duplicate, add ename and insert into the database
+          const companyWithEname = {
+            ...company,
+            ename: newemployeeSelection,
+            AssignDate: new Date()
+          };
+  
+          const insertedCompany = await CompanyModel.create(companyWithEname);
+          insertedCompanies.push(insertedCompany);
+        } else {
+          console.log(`Duplicate entry found for companyNumber: ${company["Company Name"]}. Skipped.`);
+        }
+      }
+  
+      res.json(insertedCompanies);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
 
   // get the company data,
   app.get('/api/employees/:ename', async (req, res) => {
@@ -313,6 +373,16 @@ app.delete('/api/delete-rows', async (req, res) => {
       State: data.State,
     }));
 
+    app.put('/newcompanyname/:id' , async(req,res)=>{
+      const id = req.params.id;
+      const {ename} = req.body; 
+
+      const updatedData = await CompanyModel.findByIdAndUpdate(id, {ename: ename}, { new: true });
+
+
+
+    })
+
     // Filter out existing entries from the incoming data
     const newData = incomingData.filter((data) => {
       return !existingData.cInfo.some((existing) => {
@@ -339,6 +409,111 @@ app.delete('/api/delete-rows', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// api call for employee requesting for the data
+
+app.post('/api/requestData', async (req, res) => {
+  const { selectedYear, companyType, numberOfData , name } = req.body;
+
+  try {
+    // Create a new RequestModel instance
+    const newRequest = new RequestModel({
+      year: selectedYear,
+      ctype: companyType,
+      dAmount: numberOfData,
+      ename: name
+    });
+
+    // Save the data to MongoDB
+    const savedRequest = await newRequest.save();
+
+    res.json(savedRequest);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.post('/api/requestgData', async (req, res) => {
+  const { numberOfData , name } = req.body;
+
+  try {
+    // Create a new RequestModel instance
+    const newRequest = new RequestGModel({
+      dAmount: numberOfData,
+      ename: name
+    });
+
+    // Save the data to MongoDB
+    const savedRequest = await newRequest.save();
+
+    res.json(savedRequest);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+app.get('/api/requestData', async (req, res) => {
+  try {
+    // Retrieve all data from RequestModel
+    const allData = await RequestModel.find();
+    res.json(allData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.get('/api/requestgData', async (req, res) => {
+  try {
+    // Retrieve all data from RequestModel
+    const allData = await RequestGModel.find();
+    res.json(allData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.put('/api/requestData/:id', async (req, res) => {
+  const { id } = req.params;
+  const { read } = req.body;
+
+  try {
+    // Update the 'read' property in the MongoDB model
+    const updatedNotification = await RequestModel.findByIdAndUpdate(id, { read }, { new: true });
+    
+
+    if (!updatedNotification) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    res.json(updatedNotification);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.put('/api/requestgData/:id', async (req, res) => {
+  const { id } = req.params;
+  const { read } = req.body;
+
+  try {
+    // Update the 'read' property in the MongoDB model
+    const updatedNotification = await RequestGModel.findByIdAndUpdate(id, { read }, { new: true });
+    
+
+    if (!updatedNotification) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    res.json(updatedNotification);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
   
 

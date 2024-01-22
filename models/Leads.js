@@ -7,7 +7,7 @@ const CompanySchema = new mongoose.Schema({
   },
   "Company Number": {
     type: Number,
-    unique:true,
+   
 
   },
   "Company Email": {
@@ -38,10 +38,11 @@ const CompanySchema = new mongoose.Schema({
   }, 
   Status:{
     type:String,
-    default:"Not Picked Up"
+    default:"Untouched"
   },
   Remarks:{
-    type:String
+    type:String,
+    default:"No Remarks Added"
   }
   
 });
