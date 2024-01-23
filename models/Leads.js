@@ -31,7 +31,8 @@ const CompanySchema = new mongoose.Schema({
 
   },
   ename:{
-    type:String
+    type:String,
+    default:"Not Alloted"
   },
   AssignDate: {
     type: Date

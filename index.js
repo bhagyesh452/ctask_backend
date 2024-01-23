@@ -6,6 +6,7 @@ const CompanyModel = require("./models/Leads");
 const RequestModel = require("./models/Request");
 const RequestGModel = require("./models/RequestG");
 const jwt = require("jsonwebtoken");
+const onlyAdminModel = require("./models/AdminTable");
 require("dotenv").config();
 
 const app = express();
@@ -24,15 +25,15 @@ mongoose
 const secretKey = process.env.SECRET_KEY || "mydefaultsecret";
 console.log(secretKey);
 
-app.post("/login", async (req, res) => {
+app.post("/admin/login-admin", async (req, res) => {
   const { username, password } = req.body;
   console.log(username, password);
   // Simulate user authentication (replace with actual authentication logic)
   // (u) => u.email === username && u.password === password
   // const user = await adminModel.find();
-  const user = await adminModel.findOne({
-    email: username,
-    password: password,
+  const user = await onlyAdminModel.findOne({
+    admin_email: username,
+    admin_password: password,
   });
   console.log(user);
   if (user) {
