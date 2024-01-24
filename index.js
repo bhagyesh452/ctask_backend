@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(cors());
 
 mongoose
-  .connect("mongodb://localhost:27017/AdminTable")
+  .connect("mongodb+srv://bhagyesh:tVITHws96Et9dEA7@bhagyesh452.0szeifm.mongodb.net/?retryWrites=true&w=majority")
   .then(() => {
     console.log("MongoDB is connected");
   })
