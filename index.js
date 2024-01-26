@@ -7,6 +7,11 @@ const RequestModel = require("./models/Request");
 const RequestGModel = require("./models/RequestG");
 const jwt = require("jsonwebtoken");
 const onlyAdminModel = require("./models/AdminTable");
+const LeadModel = require("./models/Leadform");
+const { sendMail } = require("./helpers/sendMail");
+const { mailFormat } = require("./helpers/mailFormat");
+const multer = require("multer");
+
 require("dotenv").config();
 
 const app = express();
@@ -14,7 +19,7 @@ app.use(express.json());
 app.use(cors());
 
 mongoose
-  .connect("mongodb+srv://bhagyesh:tVITHws96Et9dEA7@bhagyesh452.0szeifm.mongodb.net/?retryWrites=true&w=majority")
+  .connect("mongodb://localhost:27017/AdminTable")
   .then(() => {
     console.log("MongoDB is connected");
   })
@@ -373,8 +378,6 @@ app.put("/neweinfo/:id", async (req, res) => {
       State: data.State,
     }));
 
- 
-
     // Filter out existing entries from the incoming data
     const newData = incomingData.filter((data) => {
       return !existingData.cInfo.some((existing) => {
@@ -403,7 +406,6 @@ app.put("/neweinfo/:id", async (req, res) => {
   }
 });
 
-
 app.put("/newcompanyname/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -411,9 +413,7 @@ app.put("/newcompanyname/:id", async (req, res) => {
 
     // Validate if 'ename' is provided
     if (!ename) {
-      return res
-        .status(400)
-        .json({ error: "Ename is required for update" });
+      return res.status(400).json({ error: "Ename is required for update" });
     }
 
     // Find and update the company data
@@ -544,20 +544,121 @@ app.put("/api/requestgData/:id", async (req, res) => {
   }
 });
 
-app.delete('/newcompanynamedelete/:id', async (req, res) => {
+app.delete("/newcompanynamedelete/:id", async (req, res) => {
   const id = req.params.id;
 
   try {
     // Find the document by id and update the ename field to null or an empty string
-    const updatedData = await CompanyModel.findByIdAndUpdate(id, { ename: null }, { new: true });
+    const updatedData = await CompanyModel.findByIdAndUpdate(
+      id,
+      { ename: null },
+      { new: true }
+    );
 
-    res.json({ message: 'Ename deleted successfully', updatedData });
+    res.json({ message: "Ename deleted successfully", updatedData });
   } catch (error) {
-    console.error('Error deleting ename:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error deleting ename:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Determine the destination path based on the fieldname
+    const destinationPath =
+      file.fieldname === "otherDocs" ? "./ExtraDocs" : "./PaymentReceipts";
+    cb(null, destinationPath);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now();
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+app.post(
+  "/lead-form",
+  upload.fields([
+    { name: "otherDocs", maxCount: 50 },
+    { name: "paymentReceipt", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        bdmName,
+        bdmEmail,
+        bdmType,
+        supportedBy,
+        bookingDate,
+        caCase,
+        caNumber,
+        caEmail,
+        caCommission,
+        companyName,
+        contactNumber,
+        companyEmail,
+        services,
+        originalTotalPayment,
+        totalPayment,
+        paymentTerms,
+        paymentMethod,
+        firstPayment,
+        secondPayment,
+        thirdPayment,
+        fourthPayment,
+        bookingSource,
+        cPANorGSTnum,
+        incoDate,
+        extraNotes,
+      } = req.body;
+
+      const otherDocs = req.files['otherDocs'] || [];
+  const paymentReceipt = req.files['paymentReceipt'] || [];// Array of files for 'file2'
+
+      // Your processing logic here
+
+      const employee = new LeadModel({
+        bdmName,
+        bdmEmail,
+        bdmType,
+        supportedBy,
+        bookingDate,
+        caCase,
+        caNumber,
+        caEmail,
+        caCommission,
+        companyName,
+        contactNumber,
+        companyEmail,
+        services,
+        originalTotalPayment,
+        totalPayment,
+        paymentTerms,
+        paymentMethod,
+        firstPayment,
+        secondPayment,
+        thirdPayment,
+        fourthPayment,
+        bookingSource,
+        cPANorGSTnum,
+        incoDate,
+        extraNotes,
+      });
+
+      const savedEmployee = await employee.save();
+      sendMail("bhagyesh@startupsahay.com","Mail received",`Thank you ${bdmName} We have received your response`,"",otherDocs, paymentReceipt)
+
+      console.log("Data sent");
+      res
+        .status(200)
+        .json(savedEmployee || { message: "Data sent successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
+      console.error("Error saving employee:", error.message);
+    }
+  }
+);
 
 app.listen(3001, () => {
   console.log("Server is running");

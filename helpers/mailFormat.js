@@ -1,0 +1,99 @@
+exports.mailFormat = (leadData) => {
+  return `<table style="border:1px solid black">
+  <thead >
+      <tr>
+          <td>CA Case</td>
+          <td>${leadData.caCase}</td>
+        </tr>
+        <tr>
+          <td>CA Number</td>
+          <td>${leadData.caNumber}</td>
+        </tr>
+        <tr>
+          <td>CA Email</td>
+          <td>${leadData.caEmail}</td>
+        </tr>
+        <tr>
+          <td>CA Commission</td>
+          <td>${leadData.caCommission}</td>
+        </tr>
+        <tr>
+          <td>Company Name</td>
+          <td>${leadData.companyName}</td>
+        </tr>
+        <tr>
+          <td>Contact Number</td>
+          <td>${leadData.contactNumber}</td>
+        </tr>
+        <tr>
+          <td>Company Email</td>
+          <td>${leadData.companyEmail}</td>
+        </tr>
+        <tr>
+          <td>Services</td>
+          <td>${leadData.services}</td>
+        </tr>
+        <tr>
+          <td>Original Total Payment</td>
+          <td>${leadData.originalTotalPayment}</td>
+        </tr>
+        <tr>
+          <td>Total Payment</td>
+          <td>${leadData.totalPayment}</td>
+        </tr>
+        <tr>
+          <td>Payment Terms</td>
+          <td>${leadData.paymentTerms}</td>
+        </tr>
+        <tr>
+          <td>Payment Method</td>
+          <td>${leadData.paymentMethod}</td>
+        </tr>
+        <tr>
+          <td>First Payment</td>
+          <td>${(leadData.firstPayment * leadData.totalPayment) /
+          100}</td>
+        </tr>
+        <tr>
+          <td>Second Payment</td>
+          <td>${(leadData.secondPayment * leadData.totalPayment) /
+          100}</td>
+        </tr>
+        <tr>
+          <td>Third Payment</td>
+          <td>${(leadData.thirdPayment * leadData.totalPayment) /
+          100}</td>
+        </tr>
+        <tr>
+          <td>Fourth Payment</td>
+          <td>${(leadData.fourthPayment * leadData.totalPayment) /
+          100}</td>
+        </tr>
+        <tr>
+          <td>Payment Receipt</td>
+          <td>${leadData.paymentReceipt}</td>
+        </tr>
+        <tr>
+          <td>Booking Source</td>
+          <td>${leadData.bookingSource}</td>
+        </tr>
+        <tr>
+          <td>CPAN or GST Number</td>
+          <td>${leadData.cPANorGSTnum}</td>
+        </tr>
+        <tr>
+          <td>Income Date</td>
+          <td>${leadData.incoDate}</td>
+        </tr>
+        <tr>
+          <td>Extra Notes</td>
+          <td>${leadData.extraNotes}</td>
+        </tr>
+        <tr>
+   
+        </tr>
+      
+  </thead>
+</table>
+        `;
+};
