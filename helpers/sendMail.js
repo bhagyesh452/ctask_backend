@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const mime = require('mime-types');
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -12,25 +13,29 @@ const transporter = nodemailer.createTransport({
 
 // async..await is not allowed in global scope, must use a wrapper
 async function sendMail(to, subject, text, html, otherDocs, paymentReceipt) {
-  // send mail with defined transport object
   const attachments = [];
 
-  // Append each file to attachments array
-   // Append files from otherDocs
-   otherDocs.forEach((file, index) => {
-    attachments.push({
-      filename: `otherDoc${index + 1}.pdf`,
-      content: file, // Assuming file is a buffer, adjust if needed
+  const processAttachments = (files, prefix) => {
+    files.forEach((file, index) => {
+      const mimeType = mime.lookup(file.originalname);
+
+      if (mimeType) {
+        attachments.push({
+          filename: `${prefix}${index + 1}.${mime.extension(mimeType)}`,
+          content: file, // Assuming file is a buffer, adjust if needed
+        });
+      } else {
+        console.warn(`Unknown file type for ${file.originalname}`);
+        // Handle unknown file type, for example, skip or log a warning
+      }
     });
-  });
+  };
+
+  // Append files from otherDocs
+  processAttachments(otherDocs, 'otherDocs');
 
   // Append files from paymentReceipt
-  paymentReceipt.forEach((file, index) => {
-    attachments.push({
-      filename: `paymentReceipt${index + 1}.pdf`,
-      content: file, // Assuming file is a buffer, adjust if needed
-    });
-  });
+  processAttachments(paymentReceipt, 'paymentReceipt');
 
   const info = await transporter.sendMail({
     from: 'aakashseth452@gmail.com', // sender address
@@ -41,7 +46,5 @@ async function sendMail(to, subject, text, html, otherDocs, paymentReceipt) {
     attachments,
   });
 }
-
-
  
 module.exports = {sendMail}

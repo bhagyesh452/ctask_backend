@@ -1,8 +1,14 @@
 const mongoose = require('mongoose');
 
 const leadSchema = new mongoose.Schema({
-    bdmName: String,
-    bdmEmail: String,
+    bdmName: {
+        type:String,
+        required:true
+    },
+    bdmEmail:{
+        type:String,
+        required:true
+    },
     bdmType: String,
     supportedBy: Boolean,
     bookingDate: Date,
@@ -13,7 +19,7 @@ const leadSchema = new mongoose.Schema({
     companyName: String,
     contactNumber: Number,
     companyEmail: String,
-    services: String,
+    services: Array,
     originalTotalPayment: Number,
     totalPayment: Number,
     paymentTerms: String,

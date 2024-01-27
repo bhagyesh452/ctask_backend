@@ -647,7 +647,53 @@ app.post(
       });
 
       const savedEmployee = await employee.save();
-      sendMail("bhagyesh@startupsahay.com","Mail received",`Thank you ${bdmName} We have received your response`,"",otherDocs, paymentReceipt)
+  //     sendMail(bdmEmail,"Mail received",`Thank you ${bdmName} We have received your response`,`<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+
+  //     <div style="max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+  //         <div style="text-align: center; margin-bottom: 20px;">
+  //             <div style="font-size: 24px; color: #333; font-weight: bold;">StartUp Sahay</div>
+  //         </div>
+  //         <div style="text-align: center; margin-bottom: 20px;">
+  //             <div style="font-size: 36px; color: #4CAF50;">✓</div>
+  //             <div style="font-size: 18px; color: #333; font-weight: bold;">Thanks for your mail</div>
+  //             <div style="font-size: 16px; color: #555;">Mr/Ms ${bdmName} we have received your mail. We will be in touch with you shortly.</div>
+  //         </div>
+  //         <div style="border-top: 2px solid #ddd; padding-top: 20px;">
+  //             <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+  //                 <thead style="background-color: #f2f2f2;">
+  //                     <tr>
+  //                         <th style="padding: 10px; text-align: left; font-size: 16px; color: #333;">Heading</th>
+  //                         <th style="padding: 10px; text-align: left; font-size: 16px; color: #333;">Detail</th>
+  //                     </tr>
+  //                 </thead>
+  //                 <tbody>
+  //                     <tr>
+  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Company Name</td>
+  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${companyName}</td>
+  //                     </tr>
+  //                     <tr>
+  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Contact Number</td>
+  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${contactNumber}</td>
+  //                     </tr>
+  //                     <tr>
+  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Company Email</td>
+  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${companyEmail}</td>
+  //                     </tr>
+                  
+  //                     <tr>
+  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Payment Amount with GST.</td>
+  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${totalPayment}</td>
+  //                     </tr>
+  //                     <tr>
+  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Company Incorporation Date</td>
+  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${incoDate}</td>
+  //                     </tr>
+  //                 </tbody>
+  //             </table>
+  //         </div>
+  //     </div>
+  
+  // </body>`,otherDocs, paymentReceipt)
 
       console.log("Data sent");
       res
