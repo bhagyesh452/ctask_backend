@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+// const { Server } = require("socket.io");
+// const http = require("http");
+// const server = http.createServer(app);
 const mongoose = require("mongoose");
 const adminModel = require("./models/Admin");
 const CompanyModel = require("./models/Leads");
@@ -11,12 +14,15 @@ const LeadModel = require("./models/Leadform");
 const { sendMail } = require("./helpers/sendMail");
 const { mailFormat } = require("./helpers/mailFormat");
 const multer = require("multer");
-
+// const http = require('http');
+// const socketIo = require('socket.io');
 require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+// const server = http.createServer(app);
+// const io = socketIo(server);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -439,7 +445,7 @@ app.put("/newcompanyname/:id", async (req, res) => {
 // api call for employee requesting for the data
 
 app.post("/api/requestData", async (req, res) => {
-  const { selectedYear, companyType, numberOfData, name,cTime } = req.body;
+  const { selectedYear, companyType, numberOfData, name,cTime,cDate } = req.body;
 
   try {
     // Create a new RequestModel instance
@@ -448,7 +454,8 @@ app.post("/api/requestData", async (req, res) => {
       ctype: companyType,
       dAmount: numberOfData,
       ename: name,
-      cTime:cTime
+      cTime:cTime,
+      cDate:cDate
     });
 
     // Save the data to MongoDB
@@ -460,24 +467,28 @@ app.post("/api/requestData", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-app.post("/api/requestgData", async (req, res) => {
-  const { numberOfData, name , cTime } = req.body;
+app.post('/api/requestgData', async (req, res) => {
+  const { numberOfData, name, cTime, cDate } = req.body;
 
   try {
     // Create a new RequestModel instance
     const newRequest = new RequestGModel({
       dAmount: numberOfData,
       ename: name,
-      cTime:cTime
+      cTime: cTime,
+      cDate: cDate
     });
 
     // Save the data to MongoDB
     const savedRequest = await newRequest.save();
 
+    // Emit a socket.io message when a new request is posted
+    // io.emit('newRequest', savedRequest);
+
     res.json(savedRequest);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -1002,6 +1013,15 @@ app.post(
     }
   }
 );
+
+// io.on('connection', (socket) => {
+//   console.log('A user connected');
+
+//   // Handle disconnection
+//   socket.on('disconnect', () => {
+//     console.log('User disconnected');
+//   });
+// });
 
 app.listen(3001, () => {
   console.log("Server is running");

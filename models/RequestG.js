@@ -19,6 +19,9 @@ const requestSchema = new mongoose.Schema({
   },
   cTime:{
     type:String,
+  },
+  cDate:{
+    type:String
   }
 });
 
