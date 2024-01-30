@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors());
 
 mongoose
-  .connect("mongodb://localhost:27017/AdminTable")
+  .connect(process.env.MONGO_URL)
   .then(() => {
     console.log("MongoDB is connected");
   })
@@ -145,6 +145,7 @@ app.post("/update-status/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 app.post("/update-remarks/:id", async (req, res) => {
   const { id } = req.params;
   const { Remarks } = req.body;
@@ -438,7 +439,7 @@ app.put("/newcompanyname/:id", async (req, res) => {
 // api call for employee requesting for the data
 
 app.post("/api/requestData", async (req, res) => {
-  const { selectedYear, companyType, numberOfData, name } = req.body;
+  const { selectedYear, companyType, numberOfData, name,cTime } = req.body;
 
   try {
     // Create a new RequestModel instance
@@ -447,6 +448,7 @@ app.post("/api/requestData", async (req, res) => {
       ctype: companyType,
       dAmount: numberOfData,
       ename: name,
+      cTime:cTime
     });
 
     // Save the data to MongoDB
@@ -459,13 +461,14 @@ app.post("/api/requestData", async (req, res) => {
   }
 });
 app.post("/api/requestgData", async (req, res) => {
-  const { numberOfData, name } = req.body;
+  const { numberOfData, name , cTime } = req.body;
 
   try {
     // Create a new RequestModel instance
     const newRequest = new RequestGModel({
       dAmount: numberOfData,
       ename: name,
+      cTime:cTime
     });
 
     // Save the data to MongoDB
@@ -501,13 +504,13 @@ app.get("/api/requestgData", async (req, res) => {
 
 app.put("/api/requestData/:id", async (req, res) => {
   const { id } = req.params;
-  const { read } = req.body;
+  const { read, assigned } = req.body;
 
   try {
     // Update the 'read' property in the MongoDB model
     const updatedNotification = await RequestModel.findByIdAndUpdate(
       id,
-      { read },
+      { read, assigned },
       { new: true }
     );
 
@@ -523,13 +526,13 @@ app.put("/api/requestData/:id", async (req, res) => {
 });
 app.put("/api/requestgData/:id", async (req, res) => {
   const { id } = req.params;
-  const { read } = req.body;
+  const { read, assigned } = req.body;
 
   try {
     // Update the 'read' property in the MongoDB model
     const updatedNotification = await RequestGModel.findByIdAndUpdate(
       id,
-      { read },
+      { read, assigned },
       { new: true }
     );
 
@@ -611,6 +614,8 @@ app.post(
         cPANorGSTnum,
         incoDate,
         extraNotes,
+        empName,
+        empEmail
       } = req.body;
 
       const otherDocs = req.files['otherDocs'] || [];
@@ -645,55 +650,347 @@ app.post(
         incoDate,
         extraNotes,
       });
+      
+      const display = caCase === "No" ? "none" : "flex";
+      const displayPayment = paymentTerms === "Full Advanced" ? "none" : "flex";
 
       const savedEmployee = await employee.save();
-  //     sendMail(bdmEmail,"Mail received",`Thank you ${bdmName} We have received your response`,`<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+      
+      sendMail("bhagyesh@startupsahay.com","Mail received",``,`<div style="width: 80%; margin: 50px auto;">
+      <h2 style="text-align: center;">Lead Information</h2>
+      <div style="display: flex;">
+          <div style="width: 48%;">
+              <label>BDE Name:</label>
+              <div style="    padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${empName}
+              </div>
+          </div>
+          <div style="width: 48%;margin-left: 15px;">
+              <label>BDE Email Address:</label>
+              <div style="    padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${empEmail}
+              </div>
+          </div>
+      </div>
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 48%;">
+              <label>BDM Name:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${bdmName}
+              </div>
+          </div>
+          <div style="width: 48%;margin-left: 15px;">
+              <label>BDM Email Address:</label>
+              <div style="    padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${bdmEmail}
+              </div>
+          </div>
+      </div>
+      <div style="height: 1px; background-color: #bbbbbb; margin: 20px 0px;">
+      </div>
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 48%;">
+              <label>Booking Date:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${bookingDate}
+              </div>
+          </div>
 
-  //     <div style="max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-  //         <div style="text-align: center; margin-bottom: 20px;">
-  //             <div style="font-size: 24px; color: #333; font-weight: bold;">StartUp Sahay</div>
-  //         </div>
-  //         <div style="text-align: center; margin-bottom: 20px;">
-  //             <div style="font-size: 36px; color: #4CAF50;">✓</div>
-  //             <div style="font-size: 18px; color: #333; font-weight: bold;">Thanks for your mail</div>
-  //             <div style="font-size: 16px; color: #555;">Mr/Ms ${bdmName} we have received your mail. We will be in touch with you shortly.</div>
-  //         </div>
-  //         <div style="border-top: 2px solid #ddd; padding-top: 20px;">
-  //             <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
-  //                 <thead style="background-color: #f2f2f2;">
-  //                     <tr>
-  //                         <th style="padding: 10px; text-align: left; font-size: 16px; color: #333;">Heading</th>
-  //                         <th style="padding: 10px; text-align: left; font-size: 16px; color: #333;">Detail</th>
-  //                     </tr>
-  //                 </thead>
-  //                 <tbody>
-  //                     <tr>
-  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Company Name</td>
-  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${companyName}</td>
-  //                     </tr>
-  //                     <tr>
-  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Contact Number</td>
-  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${contactNumber}</td>
-  //                     </tr>
-  //                     <tr>
-  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Company Email</td>
-  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${companyEmail}</td>
-  //                     </tr>
-                  
-  //                     <tr>
-  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Payment Amount with GST.</td>
-  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${totalPayment}</td>
-  //                     </tr>
-  //                     <tr>
-  //                         <td style="padding: 10px; font-size: 16px; color: #555;">Company Incorporation Date</td>
-  //                         <td style="padding: 10px; font-size: 16px; color: #333;">${incoDate}</td>
-  //                     </tr>
-  //                 </tbody>
-  //             </table>
-  //         </div>
-  //     </div>
+      </div>
+
+      <div style="height: 1px; background-color: #bbbbbb; margin: 20px 0px;">
+      </div>
+
+      <div style="display: flex; margin-top: 20px;" id="cacase">
+          <div style="width: 48%;">
+              <label>CA Case: ${caCase}</label>
+
+
+          </div>
+
+      </div>
+      <div id="ca-case-option" style="display: ${display}; margin-top: 20px;" >
+          <div style="width: 30%;">
+              <label>Enter CA's number:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${caNumber}
+              </div>
+          </div>
+          <div style="width: 30%; margin-left: 10px;">
+              <label>Enter CA's Email:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${caEmail}
+              </div>
+          </div>
+          <div style="width: 38%; margin-left: 10px;">
+              <label>Enter CA's Commission:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${caCommission}
+              </div>
+          </div>
+
+      </div>
+      <div style="height: 1px; background-color: #bbbbbb; margin: 20px 0px;">
+      </div>
+
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 30%;">
+              <label>Enter Company's Name:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${companyName}
+              </div>
+          </div>
+          <div style="width: 30%; margin-left: 10px;">
+              <label>Enter Contact Number:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${contactNumber}
+              </div>
+          </div>
+          <div style="width: 38%; margin-left: 10px;">
+              <label>Enter Company's Email id:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${companyEmail}
+              </div>
+          </div>
+
+      </div>
+
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 48%;">
+              <label>Services:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${services}
+              </div>
+          </div>
+
+
+      </div>
+      <div style="height: 1px; background-color: #bbbbbb; margin: 20px 0px;">
+      </div>
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 48%; ">
+              <label>Total Payment:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${originalTotalPayment}
+              </div>
+          </div>
+          <div style="width: 48%;  margin-left: 10px;">
+              <label>Total Payment Including GST</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${totalPayment}
+              </div>
+          </div>
+
+
+      </div>
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 48%; ">
+              <label>Payment Terms: ${paymentTerms}</label>
+              
+          </div>
+          
+
+
+      </div>
+      <div style="display: ${displayPayment}; margin-top: 20px;">
+          <div style="width: 24%; ">
+              <label>First Payment:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${firstPayment}
+              </div>
+              <small style="background: #e7e7e7;
+              padding: 2px 8px;
+              margin: 4px 0;
+              color: rgb(63, 66, 21);
+              display: inline-block;
+              border-radius: 4px;">
+              ${firstPayment*100/totalPayment}% Amount
+              </small>
+          </div>
+          <div style="width: 24%;  margin-left: 10px;">
+              <label>Second Payment</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${secondPayment}
+              </div>
+              <small style="background: #e7e7e7;
+              padding: 2px 8px;
+              margin: 4px 0;
+              color: rgb(63, 66, 21);
+              display: inline-block;
+              border-radius: 4px;">
+              ${secondPayment*100/totalPayment}% Amount
+              </small>
+          </div>
+          <div style="width: 24%;  margin-left: 10px;">
+              <label>Third Payment</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${thirdPayment}
+              </div>
+              <small style="background: #e7e7e7;
+              padding: 2px 8px;
+              margin: 4px 0;
+              color: rgb(63, 66, 21);
+              display: inline-block;
+              border-radius: 4px;">
+              ${thirdPayment*100/totalPayment}% Amount
+              </small>
+          </div>
+          <div style="width: 24%;  margin-left: 10px;">
+              <label>Fourth Payment</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${fourthPayment}
+              </div>
+              <small style="background: #e7e7e7;
+              padding: 2px 8px;
+              margin: 4px 0;
+              color: rgb(63, 66, 21);
+              display: inline-block;
+              border-radius: 4px;">
+              ${fourthPayment*100/totalPayment}% Amount
+              </small>
+          </div>
+
+
+      </div>
+      <div style="height: 1px; background-color: #bbbbbb; margin: 20px 0px;">
+      </div>
+
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 33%; ">
+              <label>Payment Method:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${paymentMethod}
+              </div>
+          </div>
+          <div style="width: 33%;  margin-left: 10px;">
+              <label>Booking Source</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${bookingSource}
+              </div>
+          </div>
+          <div style="width: 33%;  margin-left: 10px;">
+              <label>Company Pan or GST number</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${cPANorGSTnum}
+              </div>
+          </div>
+
+
+      </div>
+      <div style="display: flex; margin-top: 20px;">
+          <div style="width: 48%; ">
+              <label>Company Incorporation Date:</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${incoDate}
+              </div>
+          </div>
+          <div style="width: 48%;  margin-left: 10px;">
+              <label>Any Extra Notes</label>
+              <div style=" padding: 8px 10px;
+                  background: #fff7e8;
+                  margin-top: 10px;
+                  border-radius: 6px;
+                  color: #724f0d;">
+                  ${extraNotes}
+              </div>
+          </div>
+          
+
+
+      </div>
+
+
+  </div>
   
-  // </body>`,otherDocs, paymentReceipt)
+  `,otherDocs, paymentReceipt)
 
       console.log("Data sent");
       res

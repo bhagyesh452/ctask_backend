@@ -12,6 +12,13 @@ const requestSchema = new mongoose.Schema({
   read:{
     type:Boolean,
     default:false
+  },
+  assigned:{
+    type:Boolean,
+    default:false
+  },
+  cTime:{
+    type:String,
   }
 });
 
